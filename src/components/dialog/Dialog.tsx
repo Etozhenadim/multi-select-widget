@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { observer } from "mobx-react-lite";
 import { selectedElementsStore } from "@/stores/selectedElementsStore";
 import { useDebounce } from "@/hooks/useDebounce";
 import { FilterSelect, SearchInput, CurrentSelectedList } from "@/components";
 import { ElementI } from "@/types/elements";
+import { cn } from "@/helpers/utils";
 interface DialogProps {
   setIsDialogOpen: (open: boolean) => void;
   elementsList: ElementI[];
@@ -24,15 +25,13 @@ export const Dialog = observer(
       }
     };
 
-    const filteredElements = useMemo(() => {
-      return elementsList.filter((el) => {
-        const matchesSearch = el.label
-          .toLowerCase()
-          .includes(debouncedSearchTerm.toLowerCase());
-        const matchesFilter = filterValue ? el.id > filterValue : true;
-        return matchesSearch && matchesFilter;
-      });
-    }, [elementsList, debouncedSearchTerm, filterValue]);
+    const filteredElements = elementsList.filter((el) => {
+      const matchesSearch = el.label
+        .toLowerCase()
+        .includes(debouncedSearchTerm.toLowerCase());
+      const matchesFilter = filterValue ? el.id > filterValue : true;
+      return matchesSearch && matchesFilter;
+    });
 
     const handleSave = () => {
       selectedElementsStore.setElements(selectedElements);
@@ -64,11 +63,12 @@ export const Dialog = observer(
               <li key={index}>
                 <label
                   htmlFor={`checkbox-${index}`}
-                  className={`flex items-center p-2 w-full ${
+                  className={cn(
+                    "flex items-center p-2 w-full hover:bg-gray-900",
                     disableOthers
                       ? "cursor-not-allowed opacity-50"
-                      : "cursor-pointer"
-                  } hover:bg-gray-900`}
+                      : "cursor-pointer",
+                  )}
                 >
                   <input
                     type="checkbox"

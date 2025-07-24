@@ -11,11 +11,9 @@ export const FilterSelect: React.FC<FilterSelectProps> = ({
     <div className="w-full border border-gray-300">
       <select
         value={value ?? ""}
-        onChange={(e) =>
-          onChange(e.target.value ? parseInt(e.target.value, 10) : null)
-        }
+        onChange={(e) => onChange(Number(e.target.value) || null)}
         name="Filter"
-        className="border-r-8 border-transparent p-2 w-full bg-gray-900 focus:outline-none"
+        className="border-r-8 border-transparent p-2 w-full bg-[#121212] focus:outline-none"
       >
         <option value="">All</option>
         <option value="10">&gt; 10</option>

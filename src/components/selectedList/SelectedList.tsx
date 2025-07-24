@@ -18,7 +18,7 @@ export const SelectedList = observer(() => {
                 {item.label}
               </span>
               <span
-                className="text-[10px] px-2.5 cursor-pointer h-full py-2.5"
+                className="text-xs px-2.5 cursor-pointer h-full py-2.5"
                 onClick={() => selectedElementsStore.removeElementById(item.id)}
               >
                 X
