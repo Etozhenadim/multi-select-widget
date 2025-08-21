@@ -14,21 +14,17 @@ export const Dialog = observer(
     const [selectedElements, setSelectedElements] = useState<ElementI[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterValue, setFilterValue] = useState<number | null>(null);
-    // Debounce the searchInput term to avoid excessive re-renders
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-    const handleSelect = React.useCallback((item: ElementI) => {
-      setSelectedElements((prev) => {
-        const isSelected = prev.some((el) => el.id === item.id);
-        if (isSelected) {
-          return prev.filter((el) => el.id !== item.id);
-        }
-        if (prev.length < 3) {
-          return [...prev, item];
-        }
-        return prev;
-      });
-    }, []);
+    const idToLowerLabel = React.useMemo(() => {
+      const map = new Map<number, string>();
+      for (const el of elementsList) map.set(el.id, el.label.toLowerCase());
+      return map;
+    }, [elementsList]);
+
+    const selectedIdSet = React.useMemo(() => {
+      return new Set(selectedElements.map((e) => e.id));
+    }, [selectedElements]);
 
     const normalizedSearch = React.useMemo(
       () => debouncedSearchTerm.toLowerCase(),
@@ -38,11 +34,25 @@ export const Dialog = observer(
     const filteredElements = React.useMemo(() => {
       const n = normalizedSearch;
       return elementsList.filter((el) => {
-        const matchesSearch = el.label.toLowerCase().includes(n);
+        const lower = idToLowerLabel.get(el.id) ?? "";
+        const matchesSearch = lower.includes(n);
         const matchesFilter = filterValue ? el.id > filterValue : true;
         return matchesSearch && matchesFilter;
       });
-    }, [elementsList, normalizedSearch, filterValue]);
+    }, [elementsList, idToLowerLabel, normalizedSearch, filterValue]);
+
+    const handleToggle = React.useCallback((item: ElementI) => {
+      setSelectedElements((prev) => {
+        const exists = prev.some((el) => el.id === item.id);
+        if (exists) return prev.filter((el) => el.id !== item.id);
+        if (prev.length < 3) return [...prev, item];
+        return prev;
+      });
+    }, []);
+
+    const handleRemove = React.useCallback((id: number) => {
+      setSelectedElements((prev) => prev.filter((el) => el.id !== id));
+    }, []);
 
     const handleSave = React.useCallback(() => {
       selectedElementsStore.setElements(selectedElements);
@@ -68,7 +78,7 @@ export const Dialog = observer(
         </div>
         <ul className="flex-1 min-h-0 max-h-[280px] overflow-y-auto w-full border border-gray-300">
           {filteredElements.map((element) => {
-            const isSelected = selectedElements.some((item) => item.id === element.id);
+            const isSelected = selectedIdSet.has(element.id);
             const disableOthers = selectedElements.length >= 3 && !isSelected;
             return (
               <li key={element.id}>
@@ -84,7 +94,7 @@ export const Dialog = observer(
                     type="checkbox"
                     id={`checkbox-${element.id}`}
                     checked={isSelected}
-                    onChange={() => handleSelect(element)}
+                    onChange={() => handleToggle(element)}
                     disabled={disableOthers}
                     className="mr-2"
                   />
@@ -97,7 +107,7 @@ export const Dialog = observer(
 
         <CurrentSelectedList
           selectedElements={selectedElements}
-          setSelectedElements={setSelectedElements}
+          onRemove={handleRemove}
         />
         <div className="flex gap-2">
           <button

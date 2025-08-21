@@ -2,12 +2,12 @@ import { ElementI } from "@/types/elements";
 
 interface CurrentSelectedListProps {
   selectedElements: ElementI[];
-  setSelectedElements: (elements: ElementI[] | ((prev: ElementI[]) => ElementI[])) => void;
+  onRemove: (id: number) => void;
 }
 
 export const CurrentSelectedList = ({
   selectedElements,
-  setSelectedElements,
+  onRemove,
 }: CurrentSelectedListProps) => {
   return (
     <>
@@ -23,9 +23,7 @@ export const CurrentSelectedList = ({
             </span>
             <span
               className="text-xs px-2.5 cursor-pointer h-full py-2.5"
-              onClick={() =>
-                setSelectedElements((prev) => prev.filter((i) => i.id !== item.id))
-              }
+              onClick={() => onRemove(item.id)}
             >
               X
             </span>
