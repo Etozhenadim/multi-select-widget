@@ -1,9 +1,9 @@
-import React, {useState} from "react";
+import React from "react";
 import {observer} from "mobx-react-lite";
-import {selectedElementsStore} from "@/stores/selectedElementsStore";
 import {useDebounce} from "@/hooks/useDebounce";
 import {FilterSelect, SearchInput, CurrentSelectedList} from "@/components";
 import {ElementI} from "@/types/elements";
+import { DialogStore } from "@/stores/dialogStore";
 
 interface DialogProps {
   setIsDialogOpen: (open: boolean) => void;
@@ -11,53 +11,17 @@ interface DialogProps {
 }
 export const Dialog = observer(
   ({setIsDialogOpen, elementsList}: DialogProps) => {
-    const [selectedElements, setSelectedElements] = useState<ElementI[]>([]);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filterValue, setFilterValue] = useState<number | null>(null);
-    const debouncedSearchTerm = useDebounce(searchTerm, 300);
+    const storeRef = React.useRef<DialogStore | null>(null);
+    if (storeRef.current === null) {
+      storeRef.current = new DialogStore(elementsList);
+    }
+    const store = storeRef.current;
 
-    const idToLowerLabel = React.useMemo(() => {
-      const map = new Map<number, string>();
-      for (const el of elementsList) map.set(el.id, el.label.toLowerCase());
-      return map;
-    }, [elementsList]);
-
-    const selectedIdSet = React.useMemo(() => {
-      return new Set(selectedElements.map((e) => e.id));
-    }, [selectedElements]);
-
-    const normalizedSearch = React.useMemo(
-      () => debouncedSearchTerm.toLowerCase(),
-      [debouncedSearchTerm]
-    );
-
-    const filteredElements = React.useMemo(() => {
-      const n = normalizedSearch;
-      return elementsList.filter((el) => {
-        const lower = idToLowerLabel.get(el.id) ?? "";
-        const matchesSearch = lower.includes(n);
-        const matchesFilter = filterValue ? el.id > filterValue : true;
-        return matchesSearch && matchesFilter;
-      });
-    }, [elementsList, idToLowerLabel, normalizedSearch, filterValue]);
-
-    const handleToggle = React.useCallback((item: ElementI) => {
-      setSelectedElements((prev) => {
-        const exists = prev.some((el) => el.id === item.id);
-        if (exists) return prev.filter((el) => el.id !== item.id);
-        if (prev.length < 3) return [...prev, item];
-        return prev;
-      });
-    }, []);
-
-    const handleRemove = React.useCallback((id: number) => {
-      setSelectedElements((prev) => prev.filter((el) => el.id !== id));
-    }, []);
-
-    const handleSave = React.useCallback(() => {
-      selectedElementsStore.setElements(selectedElements);
-      setIsDialogOpen(false);
-    }, [selectedElements, setIsDialogOpen]);
+    // Debounce only the UI input, store keeps the raw value
+    const debouncedSearchTerm = useDebounce(store.searchTerm, 300);
+    React.useEffect(() => {
+      store.setSearchTerm(debouncedSearchTerm);
+    }, [debouncedSearchTerm, store]);
 
     const baseItemClass = "flex items-center p-2 size-full hover:bg-gray-900";
 
@@ -73,13 +37,13 @@ export const Dialog = observer(
           </button>
         </div>
         <div className="flex items-center justify-between gap-5">
-          <SearchInput value={searchTerm} onChange={setSearchTerm} />
-          <FilterSelect value={filterValue} onChange={setFilterValue} />
+          <SearchInput value={store.searchTerm} onChange={store.setSearchTerm} />
+          <FilterSelect value={store.filterValue} onChange={store.setFilterValue} />
         </div>
         <ul className="flex-1 min-h-0 max-h-[280px] overflow-y-auto w-full border border-gray-300">
-          {filteredElements.map((element) => {
-            const isSelected = selectedIdSet.has(element.id);
-            const disableOthers = selectedElements.length >= 3 && !isSelected;
+          {store.filteredElements.map((element) => {
+            const isSelected = store.isSelected(element.id);
+            const disableOthers = !isSelected && !store.canSelectMore;
             return (
               <li key={element.id}>
                 <label
@@ -94,7 +58,7 @@ export const Dialog = observer(
                     type="checkbox"
                     id={`checkbox-${element.id}`}
                     checked={isSelected}
-                    onChange={() => handleToggle(element)}
+                    onChange={() => store.toggle(element)}
                     disabled={disableOthers}
                     className="mr-2"
                   />
@@ -106,12 +70,12 @@ export const Dialog = observer(
         </ul>
 
         <CurrentSelectedList
-          selectedElements={selectedElements}
-          onRemove={handleRemove}
+          selectedElements={store.selectedElements}
+          onRemove={store.remove}
         />
         <div className="flex gap-2">
           <button
-            onClick={handleSave}
+            onClick={() => { store.save(); setIsDialogOpen(false); }}
             className="bg-green-600 hover:bg-green-700 text-white px-2 py-1"
           >
             Save
