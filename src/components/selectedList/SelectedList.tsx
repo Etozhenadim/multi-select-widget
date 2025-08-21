@@ -4,7 +4,7 @@ import React from "react";
 export const SelectedList = observer(() => {
   return (
     <>
-      <p>
+      <p className="text-sm text-gray-600">
         You currently have {selectedElementsStore.data.length} selected items
       </p>
       {selectedElementsStore.data.length > 0 && (
@@ -12,17 +12,17 @@ export const SelectedList = observer(() => {
           {selectedElementsStore.data.map((item) => (
             <li
               key={item.id}
-              className="min-w-[142px] bg-[#121212] text-inherit leading-none flex items-center"
+              className="min-w-[140px] bg-[#121212] text-inherit leading-none flex items-center rounded-sm border border-gray-700"
             >
-              <span className="flex-1 border-r-1 border-white pl-2.5">
+              <span className="flex-1 border-r border-gray-700 pl-2.5 py-2 text-sm">
                 {item.label}
               </span>
-              <span
-                className="text-xs px-2.5 cursor-pointer h-full py-2.5"
+              <button
+                className="text-xs px-2 py-2 hover:text-gray-300 active:text-gray-400"
                 onClick={() => selectedElementsStore.removeElementById(item.id)}
               >
                 X
-              </span>
+              </button>
             </li>
           ))}
         </ul>

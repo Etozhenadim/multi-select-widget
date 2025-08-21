@@ -28,25 +28,25 @@ export const Dialog = observer(
       commitSearch(value);
     }, [commitSearch]);
 
-    const baseItemClass = "flex items-center p-2 size-full hover:bg-gray-800 active:bg-gray-700 transition-colors";
+    const baseItemClass = "flex items-center p-2 size-full hover:bg-zinc-800 active:bg-zinc-700 transition-colors";
 
     return (
-      <div className="flex flex-col gap-5 relative bg-[#373737] text-white size-full p-4">
+      <div className="flex flex-col gap-5 relative bg-zinc-900 text-zinc-100 size-full p-4 rounded-md border border-zinc-700">
         <div className="flex items-center justify-between">
-          <h2 className="font-medium">Select items</h2>
+          <h2 className="font-medium text-zinc-200">Select items</h2>
           <button
-            className="p-2 cursor-pointer text-white hover:text-gray-300 active:text-gray-400"
+            className="p-2 cursor-pointer text-zinc-300 hover:text-zinc-200 active:text-zinc-400"
             onClick={() => setIsDialogOpen(false)}
           >
             X
           </button>
         </div>
-        <div className="flex items-center justify-between gap-5">
+        <div className="flex items-center justify-between gap-3">
           <SearchInput value={searchInput} onChange={handleSearchChange} />
           <FilterSelect value={store.filterValue} onChange={store.setFilterValue} />
         </div>
         <div className="flex flex-col min-h-0 gap-3">
-          <ul className="flex-1 min-h-0 max-h-[240px] overflow-y-auto w-full border border-gray-300 rounded-md">
+          <ul className="flex-1 min-h-0 max-h-[240px] overflow-y-auto w-full border border-zinc-700 rounded-md">
             {store.filteredElements.map((element) => (
               <ElementRow
                 key={element.id}
@@ -66,15 +66,15 @@ export const Dialog = observer(
             />
           </div>
         </div>
-        <div className="flex gap-2 sticky bottom-0 pt-1 bg-[#373737]">
+        <div className="flex gap-2 sticky bottom-0 pt-1 bg-zinc-900">
           <button
             onClick={() => { store.save(); setIsDialogOpen(false); }}
-            className="bg-green-600 hover:bg-green-500 active:bg-green-700 text-white px-3 py-2 rounded"
+            className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white px-3 py-2 rounded"
           >
             Save
           </button>
           <button
-            className="bg-red-600 hover:bg-red-500 active:bg-red-700 text-white px-3 py-2 rounded"
+            className="bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white px-3 py-2 rounded"
             onClick={() => setIsDialogOpen(false)}
           >
             Cancel
