@@ -4,6 +4,7 @@ import {selectedElementsStore} from "@/stores/selectedElementsStore";
 import {useDebounce} from "@/hooks/useDebounce";
 import {FilterSelect, SearchInput, CurrentSelectedList} from "@/components";
 import {ElementI} from "@/types/elements";
+
 interface DialogProps {
   setIsDialogOpen: (open: boolean) => void;
   elementsList: ElementI[];
@@ -15,27 +16,38 @@ export const Dialog = observer(
     const [filterValue, setFilterValue] = useState<number | null>(null);
     // Debounce the searchInput term to avoid excessive re-renders
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
-    const handleSelect = (item: ElementI) => {
-      const exists = selectedElements.some((el) => el.id === item.id);
-      if (exists) {
-        setSelectedElements(selectedElements.filter((el) => el.id !== item.id));
-      } else if (selectedElements.length < 3) {
-        setSelectedElements([...selectedElements, item]);
-      }
-    };
 
-    const filteredElements = elementsList.filter((el) => {
-      const matchesSearch = el.label
-        .toLowerCase()
-        .includes(debouncedSearchTerm.toLowerCase());
-      const matchesFilter = filterValue ? el.id > filterValue : true;
-      return matchesSearch && matchesFilter;
-    });
+    const handleSelect = React.useCallback((item: ElementI) => {
+      setSelectedElements((prev) => {
+        const isSelected = prev.some((el) => el.id === item.id);
+        if (isSelected) {
+          return prev.filter((el) => el.id !== item.id);
+        }
+        if (prev.length < 3) {
+          return [...prev, item];
+        }
+        return prev;
+      });
+    }, []);
 
-    const handleSave = () => {
+    const normalizedSearch = React.useMemo(
+      () => debouncedSearchTerm.toLowerCase(),
+      [debouncedSearchTerm]
+    );
+
+    const filteredElements = React.useMemo(() => {
+      const n = normalizedSearch;
+      return elementsList.filter((el) => {
+        const matchesSearch = el.label.toLowerCase().includes(n);
+        const matchesFilter = filterValue ? el.id > filterValue : true;
+        return matchesSearch && matchesFilter;
+      });
+    }, [elementsList, normalizedSearch, filterValue]);
+
+    const handleSave = React.useCallback(() => {
       selectedElementsStore.setElements(selectedElements);
       setIsDialogOpen(false);
-    };
+    }, [selectedElements, setIsDialogOpen]);
 
     const baseItemClass = "flex items-center p-2 size-full hover:bg-gray-900";
 
@@ -55,15 +67,13 @@ export const Dialog = observer(
           <FilterSelect value={filterValue} onChange={setFilterValue} />
         </div>
         <ul className="flex-1 min-h-0 max-h-[280px] overflow-y-auto w-full border border-gray-300">
-          {filteredElements.map((element, index) => {
-            const isSelected = selectedElements.some(
-              (item) => item.id === element.id
-            );
+          {filteredElements.map((element) => {
+            const isSelected = selectedElements.some((item) => item.id === element.id);
             const disableOthers = selectedElements.length >= 3 && !isSelected;
             return (
-              <li key={index}>
+              <li key={element.id}>
                 <label
-                  htmlFor={`checkbox-${index}`}
+                  htmlFor={`checkbox-${element.id}`}
                   className={`${baseItemClass} ${
                     disableOthers
                       ? "cursor-not-allowed opacity-50"
@@ -72,7 +82,7 @@ export const Dialog = observer(
                 >
                   <input
                     type="checkbox"
-                    id={`checkbox-${index}`}
+                    id={`checkbox-${element.id}`}
                     checked={isSelected}
                     onChange={() => handleSelect(element)}
                     disabled={disableOthers}

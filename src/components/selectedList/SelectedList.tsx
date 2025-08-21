@@ -9,9 +9,9 @@ export const SelectedList = observer(() => {
       </p>
       {selectedElementsStore.data.length > 0 && (
         <ul className="text-white flex flex-wrap gap-2 w-full">
-          {selectedElementsStore.data.map((item, index) => (
+          {selectedElementsStore.data.map((item) => (
             <li
-              key={index}
+              key={item.id}
               className="min-w-[142px] bg-[#121212] text-inherit leading-none flex items-center"
             >
               <span className="flex-1 border-r-1 border-white pl-2.5">

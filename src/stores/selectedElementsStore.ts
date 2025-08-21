@@ -13,7 +13,10 @@ class SelectedElementsStore {
   }
 
   removeElementById(id: number) {
-    this.data = this.data.filter((element: ElementI) => element.id !== id);
+    const indexToRemove = this.data.findIndex((element: ElementI) => element.id === id);
+    if (indexToRemove !== -1) {
+      this.data.splice(indexToRemove, 1);
+    }
   }
 }
 
