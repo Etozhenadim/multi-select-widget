@@ -1,9 +1,9 @@
 import React from "react";
 import {observer} from "mobx-react-lite";
-import {useDebounce} from "@/hooks/useDebounce";
 import {FilterSelect, SearchInput, CurrentSelectedList} from "@/components";
 import {ElementI} from "@/types/elements";
 import { DialogStore } from "@/stores/dialogStore";
+import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 
 interface DialogProps {
   setIsDialogOpen: (open: boolean) => void;
@@ -17,11 +17,15 @@ export const Dialog = observer(
     }
     const store = storeRef.current;
 
-    // Debounce only the UI input, store keeps the raw value
-    const debouncedSearchTerm = useDebounce(store.searchTerm, 300);
-    React.useEffect(() => {
-      store.setSearchTerm(debouncedSearchTerm);
-    }, [debouncedSearchTerm, store]);
+    const [searchInput, setSearchInput] = React.useState(store.searchTerm);
+    const commitSearch = useDebouncedCallback((value: string) => {
+      store.setSearchTerm(value);
+    }, 300);
+
+    const handleSearchChange = React.useCallback((value: string) => {
+      setSearchInput(value);
+      commitSearch(value);
+    }, [commitSearch]);
 
     const baseItemClass = "flex items-center p-2 size-full hover:bg-gray-900";
 
@@ -37,7 +41,7 @@ export const Dialog = observer(
           </button>
         </div>
         <div className="flex items-center justify-between gap-5">
-          <SearchInput value={store.searchTerm} onChange={store.setSearchTerm} />
+          <SearchInput value={searchInput} onChange={handleSearchChange} />
           <FilterSelect value={store.filterValue} onChange={store.setFilterValue} />
         </div>
         <ul className="flex-1 min-h-0 max-h-[280px] overflow-y-auto w-full border border-gray-300">
